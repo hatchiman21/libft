@@ -6,10 +6,11 @@
 /*   By: aatieh <aatieh@student.42amman.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 16:43:10 by aatieh            #+#    #+#             */
-/*   Updated: 2024/12/26 00:37:24 by aatieh           ###   ########.fr       */
+/*   Updated: 2025/02/10 14:40:46 by aatieh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "../inc/get_next_line.h"
 #include "../inc/libft.h"
 
 int	ft_strchr_find(const char *s, int c)

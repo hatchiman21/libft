@@ -6,10 +6,11 @@
 /*   By: aatieh <aatieh@student.42amman.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 16:43:03 by aatieh            #+#    #+#             */
-/*   Updated: 2024/12/26 16:26:15 by aatieh           ###   ########.fr       */
+/*   Updated: 2025/02/10 14:39:21 by aatieh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "../inc/get_next_line.h"
 #include "../inc/libft.h"
 
 char	*merge(char *word1, char *word2, int f, int i)
@@ -24,49 +25,50 @@ char	*merge(char *word1, char *word2, int f, int i)
 	else
 		res = malloc(sizeof(char) * (ft_strlen(word1) + f + 2));
 	if (!res)
-		return (free(word1), NULL);
-	while (word1[i])
+		free(word1);
+	while (word1 && word1[i])
 	{
 		res[i] = word1[i];
 		i++;
 	}
-	while ((f == 0 && word2[j]) || (j < f))
+	while (word1 && ((f == 0 && word2[j]) || (j < f)))
 	{
 		res[i + j] = word2[j];
 		j++;
+		res[i + j] = '\0';
 	}
-	res[i + j] = '\0';
-	free (word1);
+	if (word1)
+		free(word1);
 	return (res);
 }
 
-t_line_list	*find_buffer(int fd, t_line_list **storage)
+t_line_list	*find_buffer(int fd, t_line_list **storage, t_line_list *tmp)
 {
-	t_line_list	*temp;
-
-	temp = *storage;
-	while (temp)
+	while (tmp)
 	{
-		if (temp->fd == fd)
-			return (temp);
-		temp = temp->next;
+		if (tmp->fd == fd)
+			return (tmp);
+		tmp = tmp->next;
 	}
-	temp = malloc(sizeof(t_line_list));
-	if (!temp)
+	tmp = malloc(sizeof(t_line_list));
+	if (!tmp)
 		return (NULL);
-	temp->next = NULL;
-	temp->buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (!temp->buff)
+	tmp->buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!tmp->buff)
+		free(tmp);
+	if (!tmp)
+		return (NULL);
+	ft_bzero((tmp->buff), BUFFER_SIZE + 1);
+	tmp->fd = fd;
+	if (!*storage)
 	{
-		free (temp);
-		return (NULL);
+		tmp->next = NULL;
+		*storage = tmp;
+		return (*storage);
 	}
-	ft_bzero((temp->buff), BUFFER_SIZE + 1);
-	temp->fd = fd;
-	if (*storage)
-		temp->next = *storage;
-	*storage = temp;
-	return (temp);
+	tmp->next = *storage;
+	*storage = tmp;
+	return (tmp);
 }
 
 int	first_step(t_line_list **storage, int fd, int *bytes_read, char **res)
@@ -75,9 +77,7 @@ int	first_step(t_line_list **storage, int fd, int *bytes_read, char **res)
 	char		*buff;
 	t_line_list	*current;
 
-	current = find_buffer(fd, storage);
-	if (!current)
-		return (free (*res), -1);
+	current = find_buffer(fd, storage, *storage);
 	buff = current->buff;
 	i = ft_strchr_find(buff, '\n');
 	if (ft_strlen(buff))
@@ -96,14 +96,15 @@ int	first_step(t_line_list **storage, int fd, int *bytes_read, char **res)
 	return (i);
 }
 
-char	*check_buffer(int fd, t_line_list *current,
-	char *res, t_line_list **storage)
+char	*check_buffer(int fd, t_line_list *current, char *res,
+			t_line_list **storage)
 {
 	char	*buff;
 	int		i;
 	int		bytes_read;
 
 	i = 0;
+	res[0] = '\0';
 	buff = current->buff;
 	bytes_read = BUFFER_SIZE;
 	while (i == 0)
@@ -135,18 +136,17 @@ char	*get_next_line(int fd)
 	res = malloc(sizeof(char));
 	if (!res)
 	{
-		write(2, "Memory allocation failed in get_next_line\n", 43);
+		ft_lstclear_item(&storage, fd);
 		return (NULL);
 	}
-	res[0] = '\0';
-	current = find_buffer(fd, &storage);
+	current = find_buffer(fd, &storage, storage);
 	if (!current)
 	{
-		free (res);
+		free(res);
 		return (NULL);
 	}
 	res = check_buffer(fd, current, res, &storage);
-	if (res == NULL || !current->buff || !ft_strncmp(current->buff, "", 2))
+	if (res == NULL || current->buff[0] == '\0')
 		ft_lstclear_item(&storage, fd);
 	return (res);
 }
