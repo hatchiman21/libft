@@ -6,7 +6,7 @@
 /*   By: aatieh <aatieh@student.42amman.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 16:43:10 by aatieh            #+#    #+#             */
-/*   Updated: 2024/12/25 21:08:49 by aatieh           ###   ########.fr       */
+/*   Updated: 2024/12/26 00:37:24 by aatieh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ char	*ft_lstclear_item(t_line_list **lst, int fd)
 		*lst = temp->next;
 	else
 		step->next = temp->next;
-	free(temp);
+	if (temp)
+		free(temp);
 	return (NULL);
 }

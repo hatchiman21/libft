@@ -6,7 +6,7 @@
 /*   By: aatieh <aatieh@student.42amman.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/16 16:43:03 by aatieh            #+#    #+#             */
-/*   Updated: 2024/12/25 21:08:49 by aatieh           ###   ########.fr       */
+/*   Updated: 2024/12/26 16:26:15 by aatieh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ char	*merge(char *word1, char *word2, int f, int i)
 	else
 		res = malloc(sizeof(char) * (ft_strlen(word1) + f + 2));
 	if (!res)
-		return (NULL);
+		return (free(word1), NULL);
 	while (word1[i])
 	{
 		res[i] = word1[i];
@@ -52,18 +52,19 @@ t_line_list	*find_buffer(int fd, t_line_list **storage)
 		temp = temp->next;
 	}
 	temp = malloc(sizeof(t_line_list));
-	temp->buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (!temp || !temp->buff)
+	if (!temp)
 		return (NULL);
+	temp->next = NULL;
+	temp->buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!temp->buff)
+	{
+		free (temp);
+		return (NULL);
+	}
 	ft_bzero((temp->buff), BUFFER_SIZE + 1);
 	temp->fd = fd;
-	if (!*storage)
-	{
-		temp->next = NULL;
-		*storage = temp;
-		return (*storage);
-	}
-	temp->next = *storage;
+	if (*storage)
+		temp->next = *storage;
 	*storage = temp;
 	return (temp);
 }
@@ -75,10 +76,14 @@ int	first_step(t_line_list **storage, int fd, int *bytes_read, char **res)
 	t_line_list	*current;
 
 	current = find_buffer(fd, storage);
+	if (!current)
+		return (free (*res), -1);
 	buff = current->buff;
 	i = ft_strchr_find(buff, '\n');
 	if (ft_strlen(buff))
 		*res = merge (*res, buff, i, 0);
+	if (!*res)
+		return (-1);
 	if (i != 0)
 	{
 		ft_memmove(buff, (buff + i), ft_strlen(buff + i - 1));
@@ -86,10 +91,7 @@ int	first_step(t_line_list **storage, int fd, int *bytes_read, char **res)
 	}
 	*bytes_read = read(fd, buff, BUFFER_SIZE);
 	if (*bytes_read == -1)
-	{
-		free (*res);
-		return (-1);
-	}
+		return (free (*res), -1);
 	ft_bzero((buff + *bytes_read), BUFFER_SIZE - *bytes_read + 1);
 	return (i);
 }
@@ -131,10 +133,20 @@ char	*get_next_line(int fd)
 	if (fd == -1 || BUFFER_SIZE <= 0)
 		return (NULL);
 	res = malloc(sizeof(char));
+	if (!res)
+	{
+		write(2, "Memory allocation failed in get_next_line\n", 43);
+		return (NULL);
+	}
 	res[0] = '\0';
 	current = find_buffer(fd, &storage);
+	if (!current)
+	{
+		free (res);
+		return (NULL);
+	}
 	res = check_buffer(fd, current, res, &storage);
-	if (res == NULL || !ft_strncmp(current->buff, "", 2))
+	if (res == NULL || !current->buff || !ft_strncmp(current->buff, "", 2))
 		ft_lstclear_item(&storage, fd);
 	return (res);
 }

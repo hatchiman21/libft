@@ -33,6 +33,8 @@ $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c | $(OBJS_DIR)
 $(OBJS_DIR):
 			@mkdir -p $(OBJS_DIR)
 
+bonus:		all
+
 clean:
 	@rm -rf $(OBJS_DIR)
 
@@ -41,5 +43,5 @@ fclean:			clean
 
 re:			fclean all
 
-.PHONY:			all clean fclean re
+.PHONY:			all bonus clean fclean re
 
